@@ -1,6 +1,7 @@
 # Buscante
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 14.0.3.
+Este projeto foi criado, inicialmente, pela Alura. Porém o seu desenvovilmento foi realizado por mim no desenvolver dos estudos da biblioteca RxJS.
 
 ## Development server
 
