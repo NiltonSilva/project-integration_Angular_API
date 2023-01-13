@@ -1,7 +1,7 @@
-import { VolumeInfo, ImageLinks, Item } from './../../models/interfaces';
+import { VolumeInfo, ImageLinks, Item, LivrosResultado } from './../../models/interfaces';
 import { LivroService } from './../../service/livro.service';
 import { Component, OnDestroy } from '@angular/core';
-import { Subscription, switchMap, map, filter, debounceTime } from 'rxjs';
+import { Subscription, switchMap, map, filter, debounceTime, catchError, throwError, EMPTY, of } from 'rxjs';
 import { Livro } from 'src/app/models/interfaces';
 import { LivroVolumeInfo } from 'src/app/models/livroVolumeInfo';
 import { FormControl } from '@angular/forms';
@@ -17,18 +17,39 @@ export class ListaLivrosComponent {
 
   //listaLivros: Livro[];
   campoBusca = new FormControl();
+  mensagemErro: string = '';
   //subscription: Subscription
   //livro: Livro
+  livrosResultado: LivrosResultado;
 
   constructor(private service: LivroService) { }
+
+  totalDeLivros$ = this.campoBusca.valueChanges
+  .pipe(
+    debounceTime(PAUSA),
+    filter((valorDigitado) => valorDigitado.length >= 3),
+    switchMap((valorDigitado) => this.service.buscar(valorDigitado)),
+    map(resultado => this.livrosResultado = resultado),
+    catchError(erro => {
+      console.log(erro)
+      return of()
+    })
+  )
 
   livrosEncontrados$ = this.campoBusca.valueChanges
     .pipe(
       debounceTime(PAUSA),
       filter((valorDigitado) => valorDigitado.length >= 3),
       switchMap((valorDigitado) => this.service.buscar(valorDigitado)),
-      map((items) => /*this.listaLivros = */ this.livrosResultadoParaLivros(items))
-      //
+      map(resultado => resultado.items ?? []),
+      map((items) => /*this.listaLivros = */ this.livrosResultadoParaLivros(items)),
+      catchError(erro => {
+        //this.mensagemErro = 'Caralho, pivete! Deu ruim. Tenta de novo!!!'
+        //return EMPTY
+        // Nas duas linhas de cima é uma otura forma de fazer o que tem nas duas linhas de baixo.
+        console.log(erro)
+        return throwError(() => new Error(this.mensagemErro = 'Caralho, pivete! Deu ruim. Tenta de novo!!!'))
+      })
     )
 
   // buscarLivros() {
